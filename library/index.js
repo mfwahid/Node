@@ -20,17 +20,19 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 //app.set('views', './src/views');
 app.set('view engine', 'ejs');
 
-const bookRouter = require('./src/routes/bookRoutes');
+const nav =  [
+    { link: '/books', title: 'Book' },
+    { link: '/authors', title: 'Author' },
+    { link: '/genre', title: 'Genre' }
+];
+
+const bookRouter = require('./src/routes/bookRoutes')(nav);
 app.use('/books', bookRouter);
 app.get('/', (req, res) =>
     res.render('index',
         {
             title: 'Safwan-Sana Library',
-            nav: [
-                { link: '/books', title: 'Books' },
-                { link: '/authors', title: 'Authors' },
-                { link: '/genre', title: 'Genre' }
-            ]
+            nav
         }
     ));
 
