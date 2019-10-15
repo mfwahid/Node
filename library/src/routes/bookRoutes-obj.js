@@ -1,7 +1,7 @@
 const express = require('express');
 const bookRouter = express.Router();
 const sql = require('mssql');
-const debug = require('debug')('app');
+const debug = require('debug')('app:bookRoute');
 
 function router(nav) {
 
@@ -53,34 +53,15 @@ function router(nav) {
         genre: "Fiction",
         author: "Abdul Waheed"
     }]
-    const request = new sql.Request();
-
-    //Promise example
-    /*bookRouter.route('/')
-        .get((req, res) => {
-            request.query('select * from books')
-                .then(result => {
-                    debug(result);
-                    res.render('bookList',
-                        {
-                            title: 'Books',
-                            nav,
-                            books: result.recordset
-                        })
-                });
-        });*/
 
     bookRouter.route('/')
         .get((req, res) => {
-            (async function () {
-                const result = await request.query('select * from books');
-                res.render('bookList',
-                    {
-                        title: 'Books',
-                        nav,
-                        books: result.recordset
-                    })
-            }());
+            res.render('bookList',
+                {
+                    title: 'Books',
+                    nav,
+                    books
+                })
         });
 
     bookRouter.route('/:id')
