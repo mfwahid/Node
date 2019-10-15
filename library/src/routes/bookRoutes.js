@@ -25,7 +25,7 @@ function router(nav) {
     bookRouter.route('/')
         .get((req, res) => {
             (async function () {
-                const {recordset} = await request.query('select * from books');
+                const { recordset } = await request.query('select * from books');
                 res.render('bookList',
                     {
                         title: 'Books',
@@ -36,20 +36,24 @@ function router(nav) {
         });
 
     bookRouter.route('/:id')
-        .get((req, res) => {
+        .all((req, res, next) => {
             const { id } = req.params;
             (async function () {
-        
-                const {recordset} = await request.input('id',sql.Int,Number(id)+1)
-                .query('select * from books where id = @id'); 
-             
-                res.render('bookInfo',
-                    {
-                        title: recordset[0].genre,
-                        nav,
-                        book: recordset[0]
-                    })
+                const { recordset } = await request.input('id', sql.Int, Number(id) + 1)
+                    .query('select * from books where id = @id');
+                //req.book = recordset[0];
+                //array destructuring
+                [req.book] = recordset;
+                next();
             }());
+        })
+        .get((req, res) => {
+            res.render('bookInfo',
+                {
+                    title: req.book.genre,
+                    nav,
+                    book: req.book
+                })
         });
     return bookRouter;
 }
