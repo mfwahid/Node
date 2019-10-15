@@ -1,72 +1,62 @@
 const express = require('express');
 const bookRouter = express.Router();
+const sql = require('mssql');
+const debug = require('debug')('app');
 
-const books = [{
-    id: 1,
-    title: "Ansible 3.0",
-    genre: "Automation",
-    author: "Mohamed Safwan"
-},
-{
-    id: 2,
-    title: "Concourse",
-    genre: "Dev Ops",
-    author: "Aisha Sana"
-},
-{
-    id: 3,
-    title: "Mastering Node Applications",
-    genre: "Server Scripting",
-    author: "Mohamed Safwan"
-},
-{
-    id: 4,
-    title: "Learning Me",
-    genre: "Biography",
-    author: "Abdul Waheed"
-},
-{
-    id: 5,
-    title: "Worst Human Behaviours",
-    genre: "Fiction",
-    author: "Abdul Waheed"
-},
-{
-    id: 6,
-    title: "Space Shuttle",
-    genre: "Astro Science",
-    author: "Mohamed Safwan"
-},
-{
-    id: 7,
-    title: "Drawing Basics",
-    genre: "Kids Learning",
-    author: "Aisha Sana"
-},
-{
-    id: 8,
-    title: "Miserable",
-    genre: "Fiction",
-    author: "Abdul Waheed"
-}]
+function router(nav) {
 
-bookRouter.route('/')
-    .get((req, res) => {
-        res.render('books',
-            {
-                title: 'Books',
-                nav: [
-                    { link: '/books', title: 'Books' },
-                    { link: '/authors', title: 'Authors' },
-                    { link: '/genre', title: 'Genre' }
-                ],
-                books
-            })
-    });
+    const request = new sql.Request();
 
-bookRouter.route('/single')
-    .get((req, res) => {
-        res.send('Hello single books');
-    });
+    //Promise example
+    /*bookRouter.route('/')
+        .get((req, res) => {
+            request.query('select * from books')
+                .then(result => {
+                    debug(result);
+                    res.render('bookList',
+                        {
+                            title: 'Books',
+                            nav,
+                            books: result.recordset
+                        })
+                });
+        });*/
 
-module.exports = bookRouter;
+    bookRouter.route('/')
+        .get((req, res) => {
+            (async function () {
+                const { recordset } = await request.query('select * from books');
+                res.render('bookList',
+                    {
+                        title: 'Books',
+                        nav,
+                        books: recordset
+                    })
+            }());
+        });
+
+    bookRouter.route('/:id')
+        .all((req, res, next) => {
+            const { id } = req.params;
+            (async function () {
+                const { recordset } = await request.input('id', sql.Int, Number(id) + 1)
+                    .query('select * from books where id = @id');
+                //req.book = recordset[0];
+                //array destructuring
+                [req.book] = recordset;
+                next();
+            }());
+        })
+        .get((req, res) => {
+            res.render('bookInfo',
+                {
+                    title: req.book.genre,
+                    nav,
+                    book: req.book
+                })
+        });
+    return bookRouter;
+}
+
+
+module.exports = router;
